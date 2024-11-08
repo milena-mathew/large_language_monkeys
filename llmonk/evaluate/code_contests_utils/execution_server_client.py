@@ -5,7 +5,7 @@ import docker.models.images
 import requests
 import docker
 from pathlib import Path
-from typing import List
+from typing import List, Union
 from docker.errors import DockerException, ImageNotFound
 
 from llmonk.evaluate.code_contests_utils.schema import ExecuteCodeResult
@@ -22,7 +22,7 @@ class ExecutionError(Exception):
 
 
 class ExecutionServerClient:
-    container: docker.models.containers.Container | None
+    container: Union[docker.models.containers.Container, None]
 
     def __init__(self, port: int = 8004):
         """Initialize the ExecutionServerClient.
