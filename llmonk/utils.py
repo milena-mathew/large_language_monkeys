@@ -102,6 +102,9 @@ class GenerateScriptConfig(Config):
     top_p = 0.95
     temperature = 0.6
 
+    # Sample dir from which to pull incorrect samples to eval
+    old_samples_dir = None
+
     def finalize(self):
         self.save_dir = Path(self.save_dir)
         self.save_dir.mkdir(exist_ok=True, parents=True)

@@ -69,6 +69,16 @@ def get_prompt(item):
     return prompt
 
 
+def get_prompt_from_retry(item):
+    prompt = get_prompt(item)
+    prompt += "\n" + "Your previous response was incorrect. Carefully consider the problem and try again."
+    return prompt
+
+
+def get_prompt_from_incorrect_solution(item, incorrect_solution):
+    raise NotImplementedError()
+
+
 def get_timeout(item):
     timeout_seconds = 0
     if item["time_limit"] is not None:
