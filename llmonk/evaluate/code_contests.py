@@ -48,7 +48,7 @@ def extract_first_code(output_string: str):
     return None
 
 def solution_is_correct(
-    code: str | None,
+    code,
     problem: dict,
     client: execution_server_client.ExecutionServerClient,
 ):
@@ -64,12 +64,16 @@ def solution_is_correct(
     with semaphore:
         for i in range(NUM_RETRIES):
             try:
-                is_correct = client.execute_code(
-                    extract_first_code(code),
-                    input_expected_output_pairs,
-                    timeout=problem["timeout"] + 10,  # buffer for 10
-                    memory_limit_bytes=2_000_000_000_000,  # double max limit
-                )
+                extracted_code =extract_first_code(code)
+                if extracted_code is None:
+                    is_correct = False
+                else:
+                    is_correct = client.execute_code(
+                        extracted_code,
+                        input_expected_output_pairs,
+                        timeout=problem["timeout"] + 10,  # buffer for 10
+                        memory_limit_bytes=2_000_000_000_000,  # double max limit
+                    )
                 break
             except:
                 if i == NUM_RETRIES - 1:
