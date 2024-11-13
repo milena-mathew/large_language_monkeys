@@ -75,12 +75,16 @@ def get_prompt_from_retry(item):
     return prompt
 
 
-def get_prompt_from_incorrect_solution(item):
+def get_prompt_from_incorrect_solution(item, evaled_item, index):
     prompt = get_prompt(item)
-    import pdb; pdb.set_trace()
-    incorrect_solution = load_yaml(item["name"])
-    prompt += "\n" + "Your previous solution was the following, which was incorrect. Carefully consider why this solution was incorrect and write python code to correctly solve the problem and obey the aformentioned constraints."
-    raise NotImplementedError()
+    if evaled_item["is_corrects"][index]:
+        return True, prompt
+    
+    incorrect_solution = evaled_item["samples"][index]
+    prompt += "\n" + "Your previous solution was the following, which was incorrect." 
+    prompt += "\n" + incorrect_solution
+    prompt += "\n" + "Carefully consider why this solution was incorrect and write python code to correctly solve the problem and obey the aformentioned constraints."
+    return prompt
 
 
 def get_timeout(item):
@@ -121,12 +125,28 @@ def run_inference(item, config: GenerateScriptConfig):
     assert num_samples % batch_size == 0
 
     samples = []
-    for _ in tqdm(range(num_samples // batch_size), desc=f"Item {item['name']}"):
+
+    #TODO: Only works with batch size=1 currently which seems not great
+    for i in tqdm(range(num_samples // batch_size), desc=f"Item {item['name']}"):
         if config.old_samples_dir != None:
             # We only need to resample from incorrect solutions so don't bother with new generations for previously correct samples
-            correct, prompt = get_prompt_from_incorrect_solution(item, config)
-            
-
+            evaled_item = load_yaml(config.old_samples_dir+'/'+item['name'])
+            correct, prompt = get_prompt_from_incorrect_solution(item, evaled_item, i)
+            if correct:
+                samples.extend(item["samples"][i])
+            else:
+                body = {
+                    "prompt": prompt,
+                    "max_tokens": config.max_tokens,
+                    "n": batch_size,
+                    "temperature": config.temperature,
+                    "top_p": config.top_p,
+                    "include_stop_str_in_output": True,
+                    "stop": config.stop_strings,
+                }
+                response = requests.post(url, json=body)
+                respj = response.json()
+                samples.extend(respj["text"]) 
         else:
             body = {
                 "prompt": prompt,
