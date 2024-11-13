@@ -107,7 +107,6 @@ def grade_problems(
             is_corrects.append(future.result())
 
     solutions_data["is_corrects"] = is_corrects
-
     output_dir.mkdir(parents=True, exist_ok=True)
     with open(output_dir / solutions_data["name"], "w") as f:
         yaml.dump(
