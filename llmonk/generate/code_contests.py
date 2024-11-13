@@ -7,7 +7,7 @@ import random
 import requests
 from functools import partial
 
-from llmonk.utils import save_yaml, GenerateScriptConfig
+from llmonk.utils import save_yaml, load_yaml, GenerateScriptConfig
 from llmonk.generate.vllm_utils import vllm_manager
 
 PYTHON3_LANGUAGE_ID = 3
@@ -75,7 +75,11 @@ def get_prompt_from_retry(item):
     return prompt
 
 
-def get_prompt_from_incorrect_solution(item, incorrect_solution):
+def get_prompt_from_incorrect_solution(item):
+    prompt = get_prompt(item)
+    import pdb; pdb.set_trace()
+    incorrect_solution = load_yaml(item["name"])
+    prompt += "\n" + "Your previous solution was the following, which was incorrect. Carefully consider why this solution was incorrect and write python code to correctly solve the problem and obey the aformentioned constraints."
     raise NotImplementedError()
 
 
@@ -106,29 +110,36 @@ def run_inference(item, config: GenerateScriptConfig):
     if outpath.exists():
         return
 
-    prompt = get_prompt(item)
     url = f"http://localhost:{config.vllm_port}/generate"
 
     num_samples = config.num_samples
     batch_size = config.batch_size
 
+    if not config.old_samples_dir:
+        prompt = get_prompt(item)
+
     assert num_samples % batch_size == 0
 
     samples = []
     for _ in tqdm(range(num_samples // batch_size), desc=f"Item {item['name']}"):
+        if config.old_samples_dir != None:
+            # We only need to resample from incorrect solutions so don't bother with new generations for previously correct samples
+            correct, prompt = get_prompt_from_incorrect_solution(item, config)
+            
 
-        body = {
-            "prompt": prompt,
-            "max_tokens": config.max_tokens,
-            "n": batch_size,
-            "temperature": config.temperature,
-            "top_p": config.top_p,
-            "include_stop_str_in_output": True,
-            "stop": config.stop_strings,
-        }
-        response = requests.post(url, json=body)
-        respj = response.json()
-        samples.extend(respj["text"])
+        else:
+            body = {
+                "prompt": prompt,
+                "max_tokens": config.max_tokens,
+                "n": batch_size,
+                "temperature": config.temperature,
+                "top_p": config.top_p,
+                "include_stop_str_in_output": True,
+                "stop": config.stop_strings,
+            }
+            response = requests.post(url, json=body)
+            respj = response.json()
+            samples.extend(respj["text"])
 
     out = {
         "prompt": prompt,
@@ -185,6 +196,9 @@ def main(
         offset = config.offset
     else:
         offset = 0
+
+    if config.old_samples_dir != None:
+        print(f"Using incorrect samples from {config.old_samples_dir} to add to prompt")
 
     no_image_test_dataset = no_image_test_dataset[offset:limit:stride]
 

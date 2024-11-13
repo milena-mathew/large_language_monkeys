@@ -100,7 +100,6 @@ def grade_problems(
             )
             for code in solutions_data["solutions"]
         ]
-
         is_corrects = []
         for i, future in enumerate(is_corrects_futures):
             if i % 100 == 0:

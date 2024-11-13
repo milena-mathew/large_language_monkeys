@@ -126,6 +126,10 @@ class EvaluateScriptConfig(Config):
         self.save_dir.mkdir(exist_ok=True, parents=True)
 
 
+class PlotSamplesConfig(Config):
+    samples_dir: Path = REQUIRED
+
+
 class Timeout():
   """Timeout class using ALARM signal"""
   class Timeout(Exception): pass
