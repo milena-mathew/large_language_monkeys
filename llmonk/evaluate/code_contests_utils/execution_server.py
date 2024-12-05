@@ -88,9 +88,9 @@ def execute_python_code(request: ExecuteCodeRequest):
                 )
 
                 if actual_output is None or not outputs_match(expected_output, actual_output):
-                    return ExecuteCodeResult(correct=False)
+                    return ExecuteCodeResult(correct=False, generated_output=actual_output)
 
-            return ExecuteCodeResult(correct=True)
+            return ExecuteCodeResult(correct=True, generated_output=actual_output)
 
 
     except Exception as e:

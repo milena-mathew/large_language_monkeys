@@ -68,7 +68,7 @@ def solution_is_correct(
                 if extracted_code is None:
                     is_correct = False
                 else:
-                    is_correct = client.execute_code(
+                    is_correct, generated_output = client.execute_code(
                         extracted_code,
                         input_expected_output_pairs,
                         timeout=problem["timeout"] + 10,  # buffer for 10
@@ -80,7 +80,7 @@ def solution_is_correct(
                     raise
                 time.sleep(RETRY_BACKOFF**i)
 
-    return is_correct
+    return is_correct, generated_output
 
 
 def grade_problems(
@@ -101,12 +101,16 @@ def grade_problems(
             for code in solutions_data["solutions"]
         ]
         is_corrects = []
+        generated_outputs = []
         for i, future in enumerate(is_corrects_futures):
             if i % 100 == 0:
                 print("Progress being made...")
-            is_corrects.append(future.result())
-
+            is_correct, generated_output = future.result()
+            is_corrects.append(is_correct)
+            generated_outputs.append(generated_output)
+    import pdb; pdb.set_trace()
     solutions_data["is_corrects"] = is_corrects
+    solutions_data["generated_outputs"] = generated_outputs
     output_dir.mkdir(parents=True, exist_ok=True)
     with open(output_dir / solutions_data["name"], "w") as f:
         yaml.dump(

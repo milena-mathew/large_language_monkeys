@@ -15,3 +15,4 @@ class ExecuteCodeRequest(BaseModel):
 
 class ExecuteCodeResult(BaseModel):
     correct: bool
+    generated_output: str
