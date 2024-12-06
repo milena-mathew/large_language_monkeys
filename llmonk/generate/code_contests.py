@@ -171,11 +171,13 @@ def run_inference(item, config: GenerateScriptConfig):
                     "temperature": config.temperature,
                     "top_p": config.top_p,
                     "include_stop_str_in_output": True,
-                    "stream": True,
                     "stop": config.stop_strings,
                 }
                 response = requests.post(url, json=body)
-                respj = response.json()["results"]
+                try:
+                    respj = response.json()["results"]
+                except:
+                    import pdb; pdb.set_trace()
                 for j in range(batch_size):
                     if subsamples[j] is None:
                         subsamples[j] = respj.pop(0)["text"]
