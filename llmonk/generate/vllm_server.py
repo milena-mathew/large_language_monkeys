@@ -93,13 +93,13 @@ async def generate(request: Request) -> Response:
             status_code=400, content="Prompt must be a string or a list of strings."
         )
     
-    request_id = random_uuid()
 
     results = []
     for prompt in prompts:
         if prompt is None:
             prompt = TokensPrompt(prompt_token_ids=input_ids)
 
+        request_id = random_uuid()
         results_generator = engine.generate(
             inputs=prompt, sampling_params=sampling_params, request_id=request_id
         )
