@@ -128,7 +128,7 @@ class ExecutionServerClient:
 
         if response.status_code != 200:
             raise ExecutionError(f"Execution failed with status {response.status_code}")
-
+        
         return ExecuteCodeResult(**response.json()).correct, ExecuteCodeResult(**response.json()).generated_output
 
     def ping(self) -> bool:

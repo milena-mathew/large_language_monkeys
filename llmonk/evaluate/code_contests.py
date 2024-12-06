@@ -53,7 +53,7 @@ def solution_is_correct(
     client: execution_server_client.ExecutionServerClient,
 ):
     if code is None:
-        return False
+        return False, None
 
     assert len(problem["test_cases"]["input"]) == len(problem["test_cases"]["output"])
 
@@ -67,6 +67,7 @@ def solution_is_correct(
                 extracted_code =extract_first_code(code)
                 if extracted_code is None:
                     is_correct = False
+                    generated_output = None
                 else:
                     is_correct, generated_output = client.execute_code(
                         extracted_code,
@@ -102,13 +103,17 @@ def grade_problems(
         ]
         is_corrects = []
         generated_outputs = []
+
         for i, future in enumerate(is_corrects_futures):
             if i % 100 == 0:
                 print("Progress being made...")
-            is_correct, generated_output = future.result()
+            try:
+                is_correct, generated_output = future.result()
+            except:
+                import pdb; pdb.set_trace()
             is_corrects.append(is_correct)
             generated_outputs.append(generated_output)
-    import pdb; pdb.set_trace()
+
     solutions_data["is_corrects"] = is_corrects
     solutions_data["generated_outputs"] = generated_outputs
     output_dir.mkdir(parents=True, exist_ok=True)

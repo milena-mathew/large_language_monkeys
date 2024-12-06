@@ -114,6 +114,10 @@ def run_inference(item, config: GenerateScriptConfig):
     outpath = config.save_dir / f"{item['name']}.yaml"
     if outpath.exists():
         return
+    elif config.skip_from_eval_dir:
+        check_path = config.skip_from_eval_dir / f"{item['name']}"
+        if check_path.exists():
+            return
 
     url = f"http://localhost:{config.vllm_port}/generate"
 

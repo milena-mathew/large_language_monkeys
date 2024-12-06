@@ -105,9 +105,14 @@ class GenerateScriptConfig(Config):
     # Sample dir from which to pull incorrect samples to eval
     old_samples_dir = None
 
+    #Only run new samples for what's not in an eval dir
+    skip_from_eval_dir = None
+
     def finalize(self):
         self.save_dir = Path(self.save_dir)
         self.save_dir.mkdir(exist_ok=True, parents=True)
+        if self.skip_from_eval_dir:
+            self.skip_from_eval_dir = Path(self.skip_from_eval_dir)
 
 
 class EvaluateScriptConfig(Config):
