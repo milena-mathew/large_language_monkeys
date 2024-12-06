@@ -75,10 +75,10 @@ async def generate(request: Request) -> Response:
     - other fields: the sampling parameters (See `SamplingParams` for details).
     """
     request_dict = await request.json()
-    prompt = request_dict.pop("prompt", None)
+    prompts = request_dict.pop("prompt", None)
     input_ids = request_dict.pop("input_ids", None)
 
-    if prompt is None and input_ids is None:
+    if prompts is None and input_ids is None:
         return Response(
             status_code=400, content="Prompt or input_ids must be provided."
         )
