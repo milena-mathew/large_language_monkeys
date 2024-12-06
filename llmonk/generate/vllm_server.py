@@ -85,37 +85,47 @@ async def generate(request: Request) -> Response:
 
     stream = request_dict.pop("stream", False)
     sampling_params = SamplingParams(**request_dict)
+
+    if isinstance(prompts, str):  # Single prompt case
+        prompts = [prompts]
+    elif not isinstance(prompts, list):  # Invalid format
+        return Response(
+            status_code=400, content="Prompt must be a string or a list of strings."
+        )
+    
     request_id = random_uuid()
 
-    if prompt is None:
-        prompt = TokensPrompt(prompt_token_ids=input_ids)
+    results = []
+    for prompt in prompts:
+        if prompt is None:
+            prompt = TokensPrompt(prompt_token_ids=input_ids)
 
-    results_generator = engine.generate(
-        inputs=prompt, sampling_params=sampling_params, request_id=request_id
-    )
+        results_generator = engine.generate(
+            inputs=prompt, sampling_params=sampling_params, request_id=request_id
+        )
 
-    # Streaming case
-    async def stream_results() -> AsyncGenerator[bytes, None]:
+        # Streaming case
+        async def stream_results() -> AsyncGenerator[bytes, None]:
+            async for request_output in results_generator:
+                out = make_output(request_output)
+                yield (json.dumps(out) + "\0").encode("utf-8")
+
+        if stream:
+            return StreamingResponse(stream_results())
+
+        # Non-streaming case
+        final_output = None
         async for request_output in results_generator:
-            out = make_output(request_output)
-            yield (json.dumps(out) + "\0").encode("utf-8")
+            if await request.is_disconnected():
+                # Abort the request if the client disconnects.
+                await engine.abort(request_id)
+                return Response(status_code=499)
 
-    if stream:
-        return StreamingResponse(stream_results())
+            final_output = request_output
 
-    # Non-streaming case
-    final_output = None
-    async for request_output in results_generator:
-        if await request.is_disconnected():
-            # Abort the request if the client disconnects.
-            await engine.abort(request_id)
-            return Response(status_code=499)
-
-        final_output = request_output
-
-    assert final_output is not None
-    out = make_output(final_output)
-    return JSONResponse(out)
+        assert final_output is not None
+        results.append(make_output(final_output))
+    return JSONResponse({"results": results})
 
 
 if __name__ == "__main__":

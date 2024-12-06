@@ -174,7 +174,7 @@ def run_inference(item, config: GenerateScriptConfig):
                     "stop": config.stop_strings,
                 }
                 response = requests.post(url, json=body)
-                respj = response.json()
+                respj = response.json()["results"]
                 for j in range(batch_size):
                     if subsamples[j] is None:
                         subsamples[j] = respj["text"].pop(0)
@@ -190,7 +190,7 @@ def run_inference(item, config: GenerateScriptConfig):
                 "stop": config.stop_strings,
             }
             response = requests.post(url, json=body)
-            respj = response.json()
+            respj = response.json()["results"]
             samples.extend(respj["text"])
 
     out = {
