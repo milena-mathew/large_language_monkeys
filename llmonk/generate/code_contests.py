@@ -149,18 +149,25 @@ def run_inference(item, config: GenerateScriptConfig):
         if config.old_samples_dir != None:
             # We only need to resample from incorrect solutions so don't bother with new generations for previously correct samples
             evaled_item = load_yaml(config.old_samples_dir+'/'+item['name'])
-            if config.include_output:
-                correct, prompt = get_prompt_from_incorrect_solution_with_output(item, evaled_item, i)
-            else:
-                correct, prompt = get_prompt_from_incorrect_solution(item, evaled_item, i)
+            prompts = []
+            subsamples = [None] * batch_size
+            for j in range(batch_size):
+                index = i*batch_size + j
+                if config.include_output:
+                    correct, prompt = get_prompt_from_incorrect_solution_with_output(item, evaled_item, index)
+                else:
+                    correct, prompt = get_prompt_from_incorrect_solution(item, evaled_item, index)
 
-            if correct:
-                samples.append(evaled_item["samples"][i])
-            else:
+                if correct:
+                    subsamples[j] = evaled_item["samples"][i]
+                else:
+                    prompts.append(prompt)
+
+            if prompts:    
                 body = {
-                    "prompt": prompt,
+                    "prompt": prompts,
                     "max_tokens": config.max_tokens,
-                    "n": batch_size,
+                    "n": 1,
                     "temperature": config.temperature,
                     "top_p": config.top_p,
                     "include_stop_str_in_output": True,
@@ -168,7 +175,10 @@ def run_inference(item, config: GenerateScriptConfig):
                 }
                 response = requests.post(url, json=body)
                 respj = response.json()
-                samples.extend(respj["text"]) 
+                for j in range(batch_size):
+                    if subsamples[j] is None:
+                        subsamples[j] = respj["text"].pop(0)
+                samples.extend(subsamples) 
         else:
             body = {
                 "prompt": prompt,
