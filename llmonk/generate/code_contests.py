@@ -171,6 +171,7 @@ def run_inference(item, config: GenerateScriptConfig):
                     "temperature": config.temperature,
                     "top_p": config.top_p,
                     "include_stop_str_in_output": True,
+                    "stream": True,
                     "stop": config.stop_strings,
                 }
                 response = requests.post(url, json=body)
