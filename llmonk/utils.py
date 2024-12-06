@@ -105,6 +105,9 @@ class GenerateScriptConfig(Config):
     # Sample dir from which to pull incorrect samples to eval
     old_samples_dir = None
 
+    #Include incorrect outputs
+    include_output = False
+
     #Only run new samples for what's not in an eval dir
     skip_from_eval_dir = None
 

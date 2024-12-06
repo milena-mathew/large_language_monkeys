@@ -88,6 +88,19 @@ def get_prompt_from_incorrect_solution(item, evaled_item, index):
     return False, prompt
 
 
+def get_prompt_from_incorrect_solution_with_output(item, evaled_item, index):
+    prompt = get_prompt(item)
+    if evaled_item["is_corrects"][index]:
+        return True, prompt
+    
+    incorrect_solution = evaled_item["samples"][index]
+    prompt += "\nA:" + incorrect_solution
+    prompt += "\nOutput:" + evaled_item["generated_outputs"][index]
+    prompt += "\n\n" + "Carefully consider why this solution was incorrect, and write *python code* to correctly solve the problem. Only generate the correct python code and wrap with ```."
+    prompt += "\nA:"
+    return False, prompt
+
+
 def get_timeout(item):
     timeout_seconds = 0
     if item["time_limit"] is not None:
@@ -136,7 +149,11 @@ def run_inference(item, config: GenerateScriptConfig):
         if config.old_samples_dir != None:
             # We only need to resample from incorrect solutions so don't bother with new generations for previously correct samples
             evaled_item = load_yaml(config.old_samples_dir+'/'+item['name'])
-            correct, prompt = get_prompt_from_incorrect_solution(item, evaled_item, i)
+            if config.include_output:
+                correct, prompt = get_prompt_from_incorrect_solution_with_output(item, evaled_item, i)
+            else:
+                correct, prompt = get_prompt_from_incorrect_solution(item, evaled_item, i)
+
             if correct:
                 samples.append(evaled_item["samples"][i])
             else:
