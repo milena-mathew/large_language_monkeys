@@ -177,7 +177,7 @@ def run_inference(item, config: GenerateScriptConfig):
                 respj = response.json()["results"]
                 for j in range(batch_size):
                     if subsamples[j] is None:
-                        subsamples[j] = respj["text"].pop(0)
+                        subsamples[j] = respj.pop(0)["text"]
                 samples.extend(subsamples) 
         else:
             body = {
