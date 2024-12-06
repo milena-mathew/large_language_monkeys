@@ -95,7 +95,7 @@ def get_prompt_from_incorrect_solution_with_output(item, evaled_item, index):
     
     incorrect_solution = evaled_item["samples"][index]
     prompt += "\nA:" + incorrect_solution
-    prompt += "\nOutput:" + evaled_item["generated_outputs"][index]
+    prompt += "\nOutput:" + str(evaled_item["generated_outputs"][index])
     prompt += "\n\n" + "Carefully consider why this solution was incorrect, and write *python code* to correctly solve the problem. Only generate the correct python code and wrap with ```."
     prompt += "\nA:"
     return False, prompt
