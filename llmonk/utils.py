@@ -136,7 +136,7 @@ class EvaluateScriptConfig(Config):
 
 class PlotSamplesConfig(Config):
     samples_dir: Path = REQUIRED
-
+    output_file: str = "test.png"
 
 class Timeout():
   """Timeout class using ALARM signal"""

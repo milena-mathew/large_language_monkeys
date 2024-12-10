@@ -64,7 +64,7 @@ def solution_is_correct(
     with semaphore:
         for i in range(NUM_RETRIES):
             try:
-                extracted_code =extract_first_code(code)
+                extracted_code = extract_first_code(code)
                 if extracted_code is None:
                     is_correct = False
                     generated_output = None
@@ -128,7 +128,21 @@ def grade_problems(
 def load_data_from_yaml_file(input_path):
     """Loads results data from a yaml file."""
     data = load_yaml(input_path)
-    data["solutions"] = [extract_first_code(sample) for sample in data["samples"]]
+    try:
+        solutions = []
+        for sample in data["samples"]:
+            if isinstance(sample, str):
+                solutions.append(extract_first_code(sample))
+            elif isinstance(sample, list):
+                if len(sample) != 1:
+                    import pdb; pdb.set_trace()
+                else:
+                    solutions.append(extract_first_code(sample[-1]))
+            else:
+                import pdb; pdb.set_trace()
+        data["solutions"] = solutions
+    except:
+        import pdb; pdb.set_trace()
     data["name"] = input_path.stem
     return data
 
@@ -144,14 +158,10 @@ def main(config):
         f"Num already evaled: {len(already_evaled)}",
     )
 
-    with Pool(config.num_workers) as process_pool:
-        solutions_data = process_pool.map(
-            load_data_from_yaml_file,
-            [file for file in tqdm(to_eval_files, desc="loading yaml files")],
-        )
+    solutions_data = [load_data_from_yaml_file(file) for file in tqdm(to_eval_files, desc="loading yaml files")]
 
     print("Done loading yaml files.")
-
+    import pdb; pdb.set_trace()
     # multiprocessing pool is used to load data
     with execution_server_client.ExecutionServerClient() as client:
         # threads are used to run code in parallel
